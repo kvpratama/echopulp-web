@@ -1,18 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
+{% if msg %}
+<div class="alert alert-info">{{ msg }}</div>
+{% endif %}
 <div class="row mb-4">
     <div class="col-md-3">
         <img src="{{ artwork }}" class="img-fluid rounded">
     </div>
     <div class="col-md-9">
         <h2>{{ title }}</h2>
-        <form method="post" action="/subscribe">
+        {% if is_subscribed %}
+        <form method="post" action="/unsubscribe" style="display:inline">
+            <input type="hidden" name="podcast_id" value="{{ podcast_id }}">
+            <input type="hidden" name="feed_url" value="{{ feed_url }}">
+            <input type="hidden" name="title" value="{{ title }}">
+            <input type="hidden" name="artwork" value="{{ artwork }}">
+            <button class="btn btn-danger">Unsubscribe</button>
+        </form>
+        {% else %}
+        <form method="post" action="/subscribe" style="display:inline">
             <input type="hidden" name="podcast_id" value="{{ podcast_id }}">
             <input type="hidden" name="podcast_title" value="{{ title }}">
             <input type="hidden" name="feed_url" value="{{ feed_url }}">
             <input type="hidden" name="artwork_url" value="{{ artwork }}">
             <button class="btn btn-success">Subscribe</button>
         </form>
+        {% endif %}
     </div>
 </div>
 <h4>Episodes</h4>
