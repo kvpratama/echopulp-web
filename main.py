@@ -11,6 +11,8 @@ from sqlalchemy.exc import IntegrityError
 from database import SessionLocal, engine
 from models import Base, Subscription
 import asyncio
+import feedparser
+from datetime import datetime
 
 app = FastAPI()
 
@@ -122,13 +124,45 @@ async def unsubscribe(
     response = RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
     return response
 
+# Helper function to get the latest episode date from a feed URL
+def get_latest_episode_date(feed_url):
+    try:
+        parsed = feedparser.parse(feed_url)
+        entries = parsed.entries
+        if not entries:
+            return None
+        # Try to get published_parsed, fallback to updated_parsed
+        latest = max(
+            entries,
+            key=lambda e: e.get("published_parsed") or e.get("updated_parsed") or 0
+        )
+        dt = latest.get("published_parsed") or latest.get("updated_parsed")
+        if dt:
+            return datetime(*dt[:6])
+    except Exception:
+        pass
+    return None
+
 @app.get("/subscriptions")
 async def subscriptions(request: Request, db: AsyncSession = Depends(get_db)):
     user_id = "default"
     result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subs = result.scalars().all()
+
+    # Attach latest_episode_date to each sub and sort
+    for sub in subs:
+        sub.latest_episode_date = get_latest_episode_date(sub.feed_url)
+    subs = sorted(
+        subs,
+        key=lambda s: s.latest_episode_date or datetime.min,
+        reverse=True
+    )
+
     msg = request.query_params.get("msg", None)
-    return templates.TemplateResponse("subscriptions.html", {"request": request, "subs": subs, "msg": msg})
+    return templates.TemplateResponse(
+        "subscriptions.html",
+        {"request": request, "subs": subs, "msg": msg}
+    )
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)

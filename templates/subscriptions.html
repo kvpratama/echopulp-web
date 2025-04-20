@@ -10,6 +10,11 @@
         <img src="{{ sub.artwork_url }}" width="60" class="me-3">
         <div>
             <strong>{{ sub.podcast_title }}</strong><br>
+            {% if sub.latest_episode_date %}
+            <span class="text-muted">Latest episode: {{ sub.latest_episode_date.strftime('%Y-%m-%d') }}</span><br>
+            {% else %}
+            <span class="text-muted">No episodes found</span><br>
+            {% endif %}
             <a href="/podcast/{{ sub.podcast_id }}?feed_url={{ sub.feed_url|urlencode }}&title={{ sub.podcast_title|urlencode }}&artwork={{ sub.artwork_url|urlencode }}" class="btn btn-sm btn-primary mt-1">View</a>
             <form method="post" action="/unsubscribe" style="display:inline">
                 <input type="hidden" name="podcast_id" value="{{ sub.podcast_id }}">
