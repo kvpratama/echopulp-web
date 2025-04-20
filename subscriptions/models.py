@@ -1,12 +1,11 @@
 from sqlalchemy import Column, Integer, String, DateTime, UniqueConstraint
-from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String, index=True)  # For future multi-user
+    user_id = Column(String, index=True)
     podcast_id = Column(String, index=True)
     podcast_title = Column(String)
     feed_url = Column(String)

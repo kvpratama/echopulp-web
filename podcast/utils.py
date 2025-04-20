@@ -1,6 +1,8 @@
 import requests
 import os
 import feedparser
+import httpx
+from datetime import datetime
 
 def download_audio(url: str, dest_path: str) -> str:
     """Download up to the first 10MB of audio file from a URL to dest_path."""
@@ -28,3 +30,25 @@ async def fetch_podcast_episodes(feed_url: str):
         return []
     parsed = feedparser.parse(feed_url)
     return parsed.entries
+
+async def get_latest_episode_date_async(feed_url):
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(feed_url)
+            if resp.status_code != 200:
+                return None
+            content = resp.content
+        parsed = feedparser.parse(content)
+        entries = parsed.entries
+        if not entries:
+            return None
+        latest = max(
+            entries,
+            key=lambda e: e.get("published_parsed") or e.get("updated_parsed") or 0
+        )
+        dt = latest.get("published_parsed") or latest.get("updated_parsed")
+        if dt:
+            return datetime(*dt[:6])
+    except Exception:
+        pass
+    return None

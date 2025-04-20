@@ -1,28 +1,26 @@
 import uvicorn
 from fastapi import FastAPI, Request, Form, Depends, status
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import httpx
-import feedparser
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
-from database import SessionLocal, engine
-from models import Base, Subscription
-import asyncio
-from datetime import datetime
+from database import SessionLocal, engine, Base
+from subscriptions.models import Subscription
 from podcast.summary import process_podcast_summary
 from pydantic import BaseModel
 from podcast.models import PodcastEpisode, get_engine
 from sqlalchemy.orm import sessionmaker
 from podcast.utils import fetch_podcast_episodes
-
+from subscriptions.routes import router as subscriptions_router
+from subscriptions.crud import is_user_subscribed
+from app_config import templates
 
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+app.include_router(subscriptions_router)
 
 # Dependency
 async def get_db():
@@ -57,13 +55,6 @@ async def search(request: Request, q: str = "", db: AsyncSession = Depends(get_d
         {"request": request, "podcasts": podcasts, "query": q, "subscribed_ids": subscribed_ids}
     )
 
-# Helper function to check subscription
-async def is_user_subscribed(db, user_id: str, podcast_id: str):
-    sub_result = await db.execute(
-        select(Subscription).where((Subscription.user_id == user_id) & (Subscription.podcast_id == podcast_id))
-    )
-    return sub_result.scalar() is not None
-
 @app.get("/podcast/{podcast_id}")
 async def podcast_detail(request: Request, podcast_id: str, feed_url: str, title: str = "", artwork: str = "", msg: str = None, db: AsyncSession = Depends(get_db)):
     user_id = "default"
@@ -81,96 +72,6 @@ async def podcast_detail(request: Request, podcast_id: str, feed_url: str, title
             "is_subscribed": is_subscribed,
             "msg": msg
         }
-    )
-
-@app.post("/subscribe")
-async def subscribe(request: Request, podcast_id: str = Form(...), podcast_title: str = Form(...), feed_url: str = Form(...), artwork_url: str = Form(...), q: str = Form(None), db: AsyncSession = Depends(get_db)):
-    user_id = "default"
-    sub = Subscription(user_id=user_id, podcast_id=podcast_id, podcast_title=podcast_title, feed_url=feed_url, artwork_url=artwork_url)
-    db.add(sub)
-    try:
-        await db.commit()
-        message = "Subscribed successfully!"
-    except IntegrityError:
-        await db.rollback()
-        message = "You are already subscribed to this podcast."
-    except Exception:
-        await db.rollback()
-        message = "An error occurred while subscribing."
-    if q:
-        url = f"/search?q={q}&msg={message}"
-    else:
-        url = f"/podcast/{podcast_id}?feed_url={feed_url}&title={podcast_title}&artwork={artwork_url}&msg={message}"
-    response = RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
-    return response
-
-@app.post("/unsubscribe")
-async def unsubscribe(
-    request: Request,
-    podcast_id: str = Form(...),
-    feed_url: str = Form(None),
-    title: str = Form(None),
-    artwork: str = Form(None),
-    q: str = Form(None),
-    db: AsyncSession = Depends(get_db)
-):
-    user_id = "default"
-    await db.execute(
-        Subscription.__table__.delete().where(
-            (Subscription.user_id == user_id) & (Subscription.podcast_id == podcast_id)
-        )
-    )
-    await db.commit()
-    message = "Unsubscribed successfully."
-    if q:
-        url = f"/search?q={q}&msg={message}"
-    elif feed_url and title and artwork:
-        url = f"/podcast/{podcast_id}?feed_url={feed_url}&title={title}&artwork={artwork}&msg={message}"
-    else:
-        url = f"/subscriptions?msg={message}"
-    response = RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
-    return response
-
-async def get_latest_episode_date_async(feed_url):
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(feed_url)
-            if resp.status_code != 200:
-                return None
-            content = resp.content
-        parsed = feedparser.parse(content)
-        entries = parsed.entries
-        if not entries:
-            return None
-        latest = max(
-            entries,
-            key=lambda e: e.get("published_parsed") or e.get("updated_parsed") or 0
-        )
-        dt = latest.get("published_parsed") or latest.get("updated_parsed")
-        if dt:
-            return datetime(*dt[:6])
-    except Exception:
-        pass
-    return None
-
-@app.get("/subscriptions")
-async def subscriptions(request: Request, db: AsyncSession = Depends(get_db)):
-    user_id = "default"
-    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
-    subs = result.scalars().all()
-
-    # Fetch latest_episode_date for all subscriptions in parallel using asyncio.gather
-    async def attach_latest(sub):
-        sub.latest_episode_date = await get_latest_episode_date_async(sub.feed_url)
-        return sub
-
-    subs = await asyncio.gather(*(attach_latest(sub) for sub in subs))
-    subs.sort(key=lambda s: s.latest_episode_date or datetime.min, reverse=True)
-
-    msg = request.query_params.get("msg", None)
-    return templates.TemplateResponse(
-        "subscriptions.html",
-        {"request": request, "subs": subs, "msg": msg}
     )
 
 class PodcastSummaryRequest(BaseModel):
