@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+jinja2
+httpx
+feedparser
+sqlalchemy
+asyncpg[sa]
+psycopg2-binary
+python-dotenv
+python-multipart

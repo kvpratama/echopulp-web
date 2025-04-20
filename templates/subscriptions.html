@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>My Subscriptions</h2>
+<ul class="list-group">
+    {% for sub in subs %}
+    <li class="list-group-item d-flex align-items-center">
+        <img src="{{ sub.artwork_url }}" width="60" class="me-3">
+        <div>
+            <strong>{{ sub.podcast_title }}</strong><br>
+            <a href="/podcast/{{ sub.podcast_id }}?feed_url={{ sub.feed_url|urlencode }}&title={{ sub.podcast_title|urlencode }}&artwork={{ sub.artwork_url|urlencode }}" class="btn btn-sm btn-primary mt-1">View</a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

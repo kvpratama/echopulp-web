@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Search Results for "{{ query }}"</h2>
+<div class="row">
+    {% for p in podcasts %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <img src="{{ p.artworkUrl600 }}" class="card-img-top" alt="Artwork">
+            <div class="card-body">
+                <h5 class="card-title">{{ p.collectionName }}</h5>
+                <p class="card-text">{{ p.artistName }}</p>
+                <a href="/podcast/{{ p.collectionId }}?feed_url={{ p.feedUrl|urlencode }}&title={{ p.collectionName|urlencode }}&artwork={{ p.artworkUrl600|urlencode }}" class="btn btn-primary">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
