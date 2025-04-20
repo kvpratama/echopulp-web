@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from podcast.models import PodcastEpisode, get_engine
 from sqlalchemy.orm import sessionmaker
 
+
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -128,14 +129,17 @@ async def unsubscribe(
     response = RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
     return response
 
-# Helper function to get the latest episode date from a feed URL
-def get_latest_episode_date(feed_url):
+async def get_latest_episode_date_async(feed_url):
     try:
-        parsed = feedparser.parse(feed_url)
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(feed_url)
+            if resp.status_code != 200:
+                return None
+            content = resp.content
+        parsed = feedparser.parse(content)
         entries = parsed.entries
         if not entries:
             return None
-        # Try to get published_parsed, fallback to updated_parsed
         latest = max(
             entries,
             key=lambda e: e.get("published_parsed") or e.get("updated_parsed") or 0
@@ -153,14 +157,13 @@ async def subscriptions(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subs = result.scalars().all()
 
-    # Attach latest_episode_date to each sub and sort
-    for sub in subs:
-        sub.latest_episode_date = get_latest_episode_date(sub.feed_url)
-    subs = sorted(
-        subs,
-        key=lambda s: s.latest_episode_date or datetime.min,
-        reverse=True
-    )
+    # Fetch latest_episode_date for all subscriptions in parallel using asyncio.gather
+    async def attach_latest(sub):
+        sub.latest_episode_date = await get_latest_episode_date_async(sub.feed_url)
+        return sub
+
+    subs = await asyncio.gather(*(attach_latest(sub) for sub in subs))
+    subs.sort(key=lambda s: s.latest_episode_date or datetime.min, reverse=True)
 
     msg = request.query_params.get("msg", None)
     return templates.TemplateResponse(
