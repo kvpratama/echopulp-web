@@ -11,12 +11,12 @@ from sqlalchemy.exc import IntegrityError
 from database import SessionLocal, engine
 from models import Base, Subscription
 import asyncio
-import feedparser
 from datetime import datetime
 from podcast.summary import process_podcast_summary
 from pydantic import BaseModel
 from podcast.models import PodcastEpisode, get_engine
 from sqlalchemy.orm import sessionmaker
+from podcast.utils import fetch_podcast_episodes
 
 
 app = FastAPI()
@@ -57,16 +57,18 @@ async def search(request: Request, q: str = "", db: AsyncSession = Depends(get_d
         {"request": request, "podcasts": podcasts, "query": q, "subscribed_ids": subscribed_ids}
     )
 
+# Helper function to check subscription
+async def is_user_subscribed(db, user_id: str, podcast_id: str):
+    sub_result = await db.execute(
+        select(Subscription).where((Subscription.user_id == user_id) & (Subscription.podcast_id == podcast_id))
+    )
+    return sub_result.scalar() is not None
+
 @app.get("/podcast/{podcast_id}")
 async def podcast_detail(request: Request, podcast_id: str, feed_url: str, title: str = "", artwork: str = "", msg: str = None, db: AsyncSession = Depends(get_db)):
     user_id = "default"
-    # Check if subscribed
-    sub_result = await db.execute(select(Subscription).where((Subscription.user_id == user_id) & (Subscription.podcast_id == podcast_id)))
-    is_subscribed = sub_result.scalar() is not None
-    episodes = []
-    if feed_url:
-        parsed = feedparser.parse(feed_url)
-        episodes = parsed.entries
+    is_subscribed = await is_user_subscribed(db, user_id, podcast_id)
+    episodes = await fetch_podcast_episodes(feed_url)
     return templates.TemplateResponse(
         "details.html",
         {

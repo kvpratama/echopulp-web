@@ -1,5 +1,6 @@
 import requests
 import os
+import feedparser
 
 def download_audio(url: str, dest_path: str) -> str:
     """Download up to the first 10MB of audio file from a URL to dest_path."""
@@ -21,3 +22,9 @@ def delete_file(path: str):
     """Delete a file if it exists."""
     if os.path.exists(path):
         os.remove(path)
+
+async def fetch_podcast_episodes(feed_url: str):
+    if not feed_url:
+        return []
+    parsed = feedparser.parse(feed_url)
+    return parsed.entries
