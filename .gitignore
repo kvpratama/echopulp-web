@@ -203,3 +203,4 @@ archive.zip
 
 # macOS
 .DS_Store
+*.db

@@ -13,6 +13,10 @@ from models import Base, Subscription
 import asyncio
 import feedparser
 from datetime import datetime
+from podcast.summary import process_podcast_summary
+from pydantic import BaseModel
+from podcast.models import PodcastEpisode, get_engine
+from sqlalchemy.orm import sessionmaker
 
 app = FastAPI()
 
@@ -163,6 +167,32 @@ async def subscriptions(request: Request, db: AsyncSession = Depends(get_db)):
         "subscriptions.html",
         {"request": request, "subs": subs, "msg": msg}
     )
+
+class PodcastSummaryRequest(BaseModel):
+    audio_url: str
+    episode_id: str
+
+@app.post("/summarize_podcast")
+async def summarize_podcast(req: PodcastSummaryRequest):
+    # Try to fetch the summary from the DB first
+    engine = get_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    episode = session.query(PodcastEpisode).filter_by(id=req.episode_id).first()
+    summary = episode.summary if episode else None
+    session.close()
+    if summary:
+        return {"status": "success", "summary": summary}
+    # If not found, process and then fetch again
+    process_podcast_summary(req.audio_url, req.episode_id)
+    session = Session()
+    episode = session.query(PodcastEpisode).filter_by(id=req.episode_id).first()
+    summary = episode.summary if episode else None
+    session.close()
+    if summary:
+        return {"status": "success", "summary": summary}
+    else:
+        return {"status": "success"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)

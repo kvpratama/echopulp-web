@@ -1,6 +1,6 @@
 // AJAX subscribe/unsubscribe for search page
 
-console.log("AJAX subscribe/unsubscribe JS loaded");
+console.log("main JS loaded");
 
 function attachSearchSubFormListeners() {
     document.querySelectorAll(".search-sub-form").forEach(function(form) {
@@ -104,4 +104,35 @@ function attachSearchSubFormListeners() {
 
 document.addEventListener("DOMContentLoaded", function () {
     attachSearchSubFormListeners();
+    
+    document.querySelectorAll('.summarize-btn').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            const episodeId = btn.getAttribute('data-episode-id');
+            const audioUrl = btn.getAttribute('data-audio-url');
+            const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
+            const modalBody = document.getElementById('summaryModalBody');
+            modalBody.innerHTML = 'Loading summary...';
+            modal.show();
+            try {
+                const resp = await fetch('/summarize_podcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        episode_id: episodeId,
+                        audio_url: audioUrl
+                    })
+                });
+                const data = await resp.json();
+                if (data.summary) {
+                    modalBody.innerHTML = data.summary;
+                } else if (data.status === 'success') {
+                    modalBody.innerHTML = 'Summary is being generated and will be available soon.';
+                } else {
+                    modalBody.innerHTML = 'Failed to generate summary.';
+                }
+            } catch (e) {
+                modalBody.innerHTML = 'Error: ' + e;
+            }
+        });
+    });
 });
