@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
+{% if msg %}
+<div class="alert alert-info">{{ msg }}</div>
+{% endif %}
 <h2>My Subscriptions</h2>
 <ul class="list-group">
     {% for sub in subs %}
