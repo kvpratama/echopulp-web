@@ -123,8 +123,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                 });
                 const data = await resp.json();
-                if (data.summary) {
-                    modalBody.innerHTML = data.summary;
+                if (data.summary && data.transcription) {
+                    modalBody.innerHTML = `<h5>Summary</h5><div>${data.summary}</div><hr><h5>Transcription</h5><div style="max-height:300px;overflow:auto;font-size:smaller;white-space:pre-wrap;">${data.transcription}</div>`;
+                } else if (data.summary) {
+                    modalBody.innerHTML = `<h5>Summary</h5><div>${data.summary}</div>`;
+                } else if (data.transcription) {
+                    modalBody.innerHTML = `<h5>Transcription</h5><div style="max-height:300px;overflow:auto;font-size:smaller;white-space:pre-wrap;">${data.transcription}</div>`;
                 } else if (data.status === 'success') {
                     modalBody.innerHTML = 'Summary is being generated and will be available soon.';
                 } else {

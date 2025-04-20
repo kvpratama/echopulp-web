@@ -180,17 +180,23 @@ async def summarize_podcast(req: PodcastSummaryRequest):
     session = Session()
     episode = session.query(PodcastEpisode).filter_by(id=req.episode_id).first()
     summary = episode.summary if episode else None
+    transcription = episode.transcription if episode else None
     session.close()
-    if summary:
-        return {"status": "success", "summary": summary}
+    if summary and transcription:
+        return {"status": "success", "summary": summary, "transcription": transcription}
     # If not found, process and then fetch again
     process_podcast_summary(req.audio_url, req.episode_id)
     session = Session()
     episode = session.query(PodcastEpisode).filter_by(id=req.episode_id).first()
     summary = episode.summary if episode else None
+    transcription = episode.transcription if episode else None
     session.close()
-    if summary:
+    if summary and transcription:
+        return {"status": "success", "summary": summary, "transcription": transcription}
+    elif summary:
         return {"status": "success", "summary": summary}
+    elif transcription:
+        return {"status": "success", "transcription": transcription}
     else:
         return {"status": "success"}
 
