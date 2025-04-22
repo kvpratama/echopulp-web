@@ -6,7 +6,7 @@ from podcast.summary import process_podcast_summary
 from subscriptions.crud import is_user_subscribed
 from podcast.models import PodcastEpisode
 from database import get_db
-from pydantic import BaseModel
+from podcast.schemas import PodcastSummaryRequest
 
 router = APIRouter()
 
@@ -56,16 +56,6 @@ async def my_summaries(request: Request, db: AsyncSession = Depends(get_db)):
         {"request": request, "summaries": episodes}
     )
 
-class PodcastSummaryRequest(BaseModel):
-    episode_id: str
-    audio_url: str
-    podcast_id: str = None
-    episode_title: str = None
-    episode_description: str = None
-    podcast_title: str = None
-    podcast_image_url: str = None
-    publish_date: str = None
-    duration: str = None
 
 @router.post("/summarize_podcast")
 async def summarize_podcast(req: PodcastSummaryRequest, db: AsyncSession = Depends(get_db)):
