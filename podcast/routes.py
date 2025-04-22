@@ -44,7 +44,10 @@ async def my_summaries(request: Request, db: AsyncSession = Depends(get_db)):
                 # Try ISO, RFC822, or just year-month-day
                 for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%a, %d %b %Y %H:%M:%S %z"):
                     try:
-                        return datetime.strptime(date_str, fmt)
+                        dt = datetime.strptime(date_str, fmt)
+                        # Always make offset-naive (no tzinfo)
+                        dt = dt.replace(tzinfo=None)
+                        return dt
                     except Exception:
                         continue
             except Exception:
