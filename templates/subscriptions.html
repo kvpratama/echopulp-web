@@ -4,24 +4,28 @@
 <div class="alert alert-info">{{ msg }}</div>
 {% endif %}
 <h2>My Subscriptions</h2>
-<ul class="list-group">
+<div class="row">
     {% for sub in subs %}
-    <li class="list-group-item d-flex align-items-center">
-        <img src="{{ sub.artwork_url }}" width="60" class="me-3">
-        <div>
-            <strong>{{ sub.podcast_title }}</strong><br>
-            {% if sub.latest_episode_date %}
-            <span class="text-muted">Latest episode: {{ sub.latest_episode_date.strftime('%Y-%m-%d') }}</span><br>
-            {% else %}
-            <span class="text-muted">No episodes found</span><br>
-            {% endif %}
-            <a href="/podcast/{{ sub.podcast_id }}?feed_url={{ sub.feed_url|urlencode }}&title={{ sub.podcast_title|urlencode }}&artwork={{ sub.artwork_url|urlencode }}" class="btn btn-sm btn-primary mt-1">View</a>
-            <form method="post" action="/unsubscribe" style="display:inline">
-                <input type="hidden" name="podcast_id" value="{{ sub.podcast_id }}">
-                <button class="btn btn-sm btn-danger mt-1" onclick="return confirm('Unsubscribe from this podcast?')">Unsubscribe</button>
-            </form>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100" data-podcast-id="{{ sub.podcast_id }}">
+            <img src="{{ sub.artwork_url }}" class="card-img-top" alt="Artwork">
+            <div class="card-body">
+                <h5 class="card-title">{{ sub.podcast_title }}</h5>
+                {% if sub.latest_episode_date %}
+                <p class="card-text text-light">Latest episode: {{ sub.latest_episode_date.strftime('%Y-%m-%d') }}</p>
+                {% else %}
+                <p class="card-text text-light">No episodes found</p>
+                {% endif %}
+                <div class="card-actions">
+                  <a href="/podcast/{{ sub.podcast_id }}?feed_url={{ sub.feed_url|urlencode }}&title={{ sub.podcast_title|urlencode }}&artwork={{ sub.artwork_url|urlencode }}" class="btn btn-primary btn-sm ms-2">View</a>
+                  <form method="post" action="/unsubscribe" style="display:inline">
+                      <input type="hidden" name="podcast_id" value="{{ sub.podcast_id }}">
+                      <button class="btn btn-danger btn-sm ms-2" onclick="return confirm('Unsubscribe from this podcast?')">Unsubscribe</button>
+                  </form>
+                </div>
+            </div>
         </div>
-    </li>
+    </div>
     {% endfor %}
-</ul>
+</div>
 {% endblock %}
