@@ -109,6 +109,13 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('click', async function() {
             const episodeId = btn.getAttribute('data-episode-id');
             const audioUrl = btn.getAttribute('data-audio-url');
+            const podcastId = btn.getAttribute('data-podcast-id');
+            const episodeTitle = btn.getAttribute('data-episode-title');
+            const episodeDescription = btn.getAttribute('data-episode-description');
+            const podcastTitle = btn.getAttribute('data-podcast-title');
+            const podcastImageUrl = btn.getAttribute('data-podcast-image-url');
+            const publishDate = btn.getAttribute('data-publish-date');
+            const duration = btn.getAttribute('data-duration');
             const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
             const modalBody = document.getElementById('summaryModalBody');
             modalBody.innerHTML = 'Loading summary...';
@@ -119,7 +126,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         episode_id: episodeId,
-                        audio_url: audioUrl
+                        audio_url: audioUrl,
+                        podcast_id: podcastId,
+                        episode_title: episodeTitle,
+                        episode_description: episodeDescription,
+                        podcast_title: podcastTitle,
+                        podcast_image_url: podcastImageUrl,
+                        publish_date: publishDate,
+                        duration: duration
                     })
                 });
                 const data = await resp.json();
@@ -137,6 +151,18 @@ document.addEventListener("DOMContentLoaded", function () {
             } catch (e) {
                 modalBody.innerHTML = 'Error: ' + e;
             }
+        });
+    });
+
+    document.querySelectorAll('.summary-btn').forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            const summary = btn.getAttribute("data-summary") || "No summary available.";
+            const modalBody = document.getElementById("summaryModalBody");
+            if (modalBody) {
+                modalBody.textContent = summary;
+            }
+            const summaryModal = new bootstrap.Modal(document.getElementById('summaryModal'));
+            summaryModal.show();
         });
     });
 });

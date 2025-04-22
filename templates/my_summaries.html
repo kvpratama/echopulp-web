@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>My Summaries</h2>
+<ul class="list-group">
+    {% for episode in summaries %}
+    <li class="list-group-item mb-3 rounded shadow-sm bg-dark text-light border-secondary">
+        <h5>{{ episode.episode_title or episode.id }}</h5>
+        <audio controls style="width:100%">
+            <source src="{{ episode.audio_url }}">
+            Your browser does not support the audio element.
+        </audio>
+        <div>{{ episode.publish_date or '' }}</div>
+        <button class="btn btn-primary btn-sm summary-btn mt-2"
+                data-episode-id="{{ episode.id }}"
+                data-summary="{{ episode.summary|escape }}">
+            Summary
+        </button>
+    </li>
+    {% endfor %}
+</ul>
+<!-- Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title" id="summaryModalLabel">Episode Summary</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="summaryModalBody">
+        Loading summary...
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

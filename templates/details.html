@@ -41,7 +41,14 @@
         <div>{{ ep.summary|safe }}</div>
         <button class="btn btn-primary btn-sm summarize-btn mt-2" 
                 data-episode-id="{{ ep.id }}" 
-                data-audio-url="{{ ep.enclosures[0].href if ep.enclosures else '' }}">
+                data-audio-url="{{ ep.enclosures[0].href if ep.enclosures else '' }}"
+                data-podcast-id="{{ podcast_id }}"
+                data-episode-title="{{ ep.title }}"
+                data-episode-description="{{ ep.summary|striptags|default('') }}"
+                data-podcast-title="{{ title }}"
+                data-podcast-image-url="{{ artwork }}"
+                data-publish-date="{{ ep.published|default('') }}"
+                data-duration="{{ ep.itunes_duration if ep.itunes_duration else '' }}">
             Summarize
         </button>
     </li>
@@ -51,16 +58,16 @@
 <!-- Modal -->
 <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary">
         <h5 class="modal-title" id="summaryModalLabel">Podcast Summary</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="summaryModalBody">
         Loading summary...
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>

@@ -4,8 +4,7 @@ from app_config import templates
 from podcast.utils import fetch_podcast_episodes
 from podcast.summary import process_podcast_summary
 from subscriptions.crud import is_user_subscribed
-from podcast.models import PodcastEpisode, get_engine
-from sqlalchemy.orm import sessionmaker
+from podcast.models import PodcastEpisode
 from database import get_db
 from pydantic import BaseModel
 
@@ -30,28 +29,69 @@ async def podcast_detail(request: Request, podcast_id: str, feed_url: str, title
         }
     )
 
+@router.get("/my_summaries")
+async def my_summaries(request: Request, db: AsyncSession = Depends(get_db)):
+    from sqlalchemy.future import select
+    result = await db.execute(select(PodcastEpisode))
+    episodes = result.scalars().all()
+    # Sort episodes by publish_date descending (newest first)
+    def parse_date(episode):
+        from datetime import datetime
+        # Try to parse publish_date, fallback to min if not available
+        date_str = getattr(episode, 'publish_date', None)
+        if date_str:
+            try:
+                # Try ISO, RFC822, or just year-month-day
+                for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%a, %d %b %Y %H:%M:%S %z"):
+                    try:
+                        return datetime.strptime(date_str, fmt)
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+        return datetime.min
+    episodes = sorted(episodes, key=parse_date, reverse=True)
+    return templates.TemplateResponse(
+        "my_summaries.html",
+        {"request": request, "summaries": episodes}
+    )
+
 class PodcastSummaryRequest(BaseModel):
     episode_id: str
     audio_url: str
+    podcast_id: str = None
+    episode_title: str = None
+    episode_description: str = None
+    podcast_title: str = None
+    podcast_image_url: str = None
+    publish_date: str = None
+    duration: str = None
 
 @router.post("/summarize_podcast")
-async def summarize_podcast(req: PodcastSummaryRequest):
-    engine = get_engine()
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    episode = session.query(PodcastEpisode).filter_by(id=req.episode_id).first()
+async def summarize_podcast(req: PodcastSummaryRequest, db: AsyncSession = Depends(get_db)):
+    from sqlalchemy.future import select
+    result = await db.execute(select(PodcastEpisode).where(PodcastEpisode.id == req.episode_id))
+    episode = result.scalars().first()
     summary = episode.summary if episode else None
     transcription = episode.transcription if episode else None
-    session.close()
     if summary and transcription:
         return {"status": "success", "summary": summary, "transcription": transcription}
     # If not found, process and then fetch again
-    process_podcast_summary(req.audio_url, req.episode_id)
-    session = Session()
-    episode = session.query(PodcastEpisode).filter_by(id=req.episode_id).first()
+    await process_podcast_summary(
+        req.audio_url, req.episode_id,
+        podcast_id=req.podcast_id,
+        episode_title=req.episode_title,
+        episode_description=req.episode_description,
+        podcast_title=req.podcast_title,
+        podcast_image_url=req.podcast_image_url,
+        publish_date=req.publish_date,
+        duration=req.duration,
+        db=db
+    )
+    result = await db.execute(select(PodcastEpisode).where(PodcastEpisode.id == req.episode_id))
+    episode = result.scalars().first()
     summary = episode.summary if episode else None
     transcription = episode.transcription if episode else None
-    session.close()
     if summary and transcription:
         return {"status": "success", "summary": summary, "transcription": transcription}
     elif summary:
