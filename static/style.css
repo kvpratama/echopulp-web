@@ -85,3 +85,17 @@ body { background: #181a1b; color: #f5f6fa; }
     width: 100%;
   }
 }
+
+.list-group-item.bg-dark {
+    background-color: #23272b !important;
+    color: #f8f9fa !important;
+    border-color: #444950 !important;
+}
+
+.list-group-item.bg-dark strong {
+    color: #fff !important;
+}
+
+.list-group-item.bg-dark audio {
+    background: #23272b;
+}

@@ -31,15 +31,15 @@
 <h4>Episodes</h4>
 <ul class="list-group">
     {% for ep in episodes %}
-    <li class="list-group-item">
-        <strong>{{ ep.title }}</strong><br>
+    <li class="list-group-item mb-3 rounded shadow-sm bg-dark text-light border-secondary">
+        <h5>{{ ep.title }}</h5>
         <audio controls style="width:100%">
             <source src="{{ ep.enclosures[0].href if ep.enclosures else '' }}">
             Your browser does not support the audio element.
         </audio>
         <div>{{ ep.published if ep.published else '' }}</div>
         <div>{{ ep.summary|safe }}</div>
-        <button class="btn btn-primary btn-sm summarize-btn" 
+        <button class="btn btn-primary btn-sm summarize-btn mt-2" 
                 data-episode-id="{{ ep.id }}" 
                 data-audio-url="{{ ep.enclosures[0].href if ep.enclosures else '' }}">
             Summarize
