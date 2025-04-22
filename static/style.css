@@ -1,2 +1,87 @@
-body { background: #f8f9fa; }
+body { background: #181a1b; color: #f5f6fa; }
 .card-img-top { object-fit: cover; height: 200px; }
+
+/* Brand color */
+:root {
+  --brand-color: #FF6300;
+}
+
+.navbar, .bg-dark {
+  background-color: #23272b !important;
+}
+
+.navbar-brand img {
+  background: transparent;
+}
+
+.navbar-nav .nav-link, .btn-outline-light {
+  color: var(--brand-color) !important;
+}
+
+.btn-outline-light {
+  border-color: var(--brand-color) !important;
+  background-color: var(--brand-color) !important;
+  color: #fff !important;
+}
+
+.btn-outline-light:hover, .btn-outline-light:focus {
+  background-color: transparent !important;
+  color: var(--brand-color) !important;
+}
+
+.btn-primary {
+  background-color: var(--brand-color) !important;
+  border-color: var(--brand-color) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: transparent !important;
+  color: var(--brand-color) !important;
+  border-color: var(--brand-color) !important;
+}
+
+.card {
+  background-color: #23272b;
+  color: #f5f6fa;
+}
+
+.container {
+  background-color: transparent;
+}
+
+/* Card layout for sticky buttons */
+.card.h-100 {
+  display: flex;
+  flex-direction: column;
+}
+.card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.card-body .card-title,
+.card-body .card-text {
+  margin-bottom: 0.5rem;
+}
+.card-body .card-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+@media (max-width: 576px) {
+  .card-body .card-actions {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: stretch;
+  }
+  .card-body .card-actions > .btn,
+  .card-body .card-actions > form {
+    width: 100%;
+  }
+  .card-body .card-actions > form > .btn {
+    width: 100%;
+  }
+}

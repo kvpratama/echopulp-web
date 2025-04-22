@@ -12,26 +12,28 @@
             <div class="card-body">
                 <h5 class="card-title">{{ p.collectionName }}</h5>
                 <p class="card-text">{{ p.artistName }}</p>
-                <a href="/podcast/{{ p.collectionId }}?feed_url={{ p.feedUrl|urlencode }}&title={{ p.collectionName|urlencode }}&artwork={{ p.artworkUrl600|urlencode }}" class="btn btn-primary">View Details</a>
-                {% if p.collectionId|string in subscribed_ids %}
-                <form method="post" action="/unsubscribe" class="search-sub-form" style="display:inline">
-                    <input type="hidden" name="podcast_id" value="{{ p.collectionId }}">
-                    <input type="hidden" name="feed_url" value="{{ p.feedUrl }}">
-                    <input type="hidden" name="title" value="{{ p.collectionName }}">
-                    <input type="hidden" name="artwork" value="{{ p.artworkUrl600 }}">
-                    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
-                    <button class="btn btn-danger btn-sm ms-2">Unsubscribe</button>
-                </form>
-                {% else %}
-                <form method="post" action="/subscribe" class="search-sub-form" style="display:inline">
-                    <input type="hidden" name="podcast_id" value="{{ p.collectionId }}">
-                    <input type="hidden" name="podcast_title" value="{{ p.collectionName }}">
-                    <input type="hidden" name="feed_url" value="{{ p.feedUrl }}">
-                    <input type="hidden" name="artwork_url" value="{{ p.artworkUrl600 }}">
-                    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
-                    <button class="btn btn-success btn-sm ms-2">Subscribe</button>
-                </form>
-                {% endif %}
+                <div class="card-actions">
+                  <a href="/podcast/{{ p.collectionId }}?feed_url={{ p.feedUrl|urlencode }}&title={{ p.collectionName|urlencode }}&artwork={{ p.artworkUrl600|urlencode }}" class="btn btn-primary btn-sm ms-2">View Details</a>
+                  {% if p.collectionId|string in subscribed_ids %}
+                  <form method="post" action="/unsubscribe" class="search-sub-form" style="display:inline">
+                      <input type="hidden" name="podcast_id" value="{{ p.collectionId }}">
+                      <input type="hidden" name="feed_url" value="{{ p.feedUrl }}">
+                      <input type="hidden" name="title" value="{{ p.collectionName }}">
+                      <input type="hidden" name="artwork" value="{{ p.artworkUrl600 }}">
+                      {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                      <button class="btn btn-danger btn-sm ms-2">Unsubscribe</button>
+                  </form>
+                  {% else %}
+                  <form method="post" action="/subscribe" class="search-sub-form" style="display:inline">
+                      <input type="hidden" name="podcast_id" value="{{ p.collectionId }}">
+                      <input type="hidden" name="podcast_title" value="{{ p.collectionName }}">
+                      <input type="hidden" name="feed_url" value="{{ p.feedUrl }}">
+                      <input type="hidden" name="artwork_url" value="{{ p.artworkUrl600 }}">
+                      {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                      <button class="btn btn-success btn-sm ms-2">Subscribe</button>
+                  </form>
+                  {% endif %}
+                </div>
             </div>
         </div>
     </div>
